@@ -11,10 +11,17 @@ public class Main {
         Scanner in = new Scanner(System.in);
         var input = in.next();
         numbersOfBits = new BigInteger(input);
-        BigInteger rand = MyRandom(numbersOfBits.intValue());
-        System.out.println(MyPow(base,numbersOfBits));
-        System.out.println(rand);
-        System.out.print(MyTime(rand));
+        double logarithm =Math.log(numbersOfBits.intValue())/Math.log(2);
+        if(logarithm==Math.round(logarithm)){
+
+            BigInteger rand = MyRandom(numbersOfBits.intValue());
+            System.out.println(MyPow(base, numbersOfBits));
+            System.out.println(rand);
+            System.out.print(MyTime(rand));
+        }
+        else {
+            System.out.println("Incorrect input");
+        }
 
     }
     public static BigInteger MyRandom(int numbersOfBits) {
