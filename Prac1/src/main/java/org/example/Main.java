@@ -11,7 +11,7 @@ public class Main {
         Scanner in = new Scanner(System.in);
         var input = in.next();
         numbersOfBits = new BigInteger(input);
-        double logarithm =Math.log(numbersOfBits.intValue())/Math.log(2);
+        varlogarithm =Math.log(numbersOfBits.intValue())/Math.log(2);
         if(logarithm==Math.round(logarithm)){
 
             BigInteger rand = MyRandom(numbersOfBits.intValue());
