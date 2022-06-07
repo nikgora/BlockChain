@@ -28,14 +28,14 @@ public class Main {
         String messageInHex = "";
         for (int i = 0; i < message.length(); i++) {
             String hexString = Integer.toHexString(message.charAt(i));
-            messageInHex += (hexString);
+            messageInHex += hexString;
         }
-        int ml = (message.length()) / 2;
+        int ml = (messageInHex.length()) / 2;
         List<String> chunks = new ArrayList<>();
-        for (int i = 0; i < message.length(); i += 1024) {
+        for (int i = 0; i < messageInHex.length(); i += 1024) {
             String chunk = "";
-            for (int j = i; j < message.length(); j++) {
-                chunk += message.charAt(j);
+            for (int j = i; j < messageInHex.length(); j++) {
+                chunk += messageInHex.charAt(j);
             }
             chunks.add(i / 1024, chunk);
         }
