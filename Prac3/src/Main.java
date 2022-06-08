@@ -8,15 +8,15 @@ public class Main {
 
 
     public static void main(String[] args) {
-        System.out.println(GetSHA1Hash("hjd"));
+        System.out.println(GetSHA1Hash("abc"));
     }
 
-    public static String LeftRotate(String string, int rotate) {
+    public static String To8Chars(String string) {
         String res = "";
-        for (int i = 0; i < string.length(); i++) {
-            res += string.charAt((i + rotate) % string.length());
+        for (int i = 0; i < 8 - string.length(); i++) {
+            res += "0";
         }
-        return res;
+        return res + string;
     }
 
     public static String GetSHA1Hash(String message) {
@@ -26,67 +26,138 @@ public class Main {
         String h3 = "10325476";
         String h4 = "C3D2E1F0";
         String messageInHex = "";
+        boolean q = false;
+        int numOfChunk = -1;
         for (int i = 0; i < message.length(); i++) {
-            String hexString = Integer.toHexString(message.charAt(i));
-            messageInHex += hexString;
+            messageInHex += Integer.toHexString(message.charAt(i));
         }
-        int ml = (messageInHex.length()) / 2;
+        int ml = (messageInHex.length()) * 4;
+        String messageLengthInHex = BigEndianToHex(BigInteger.valueOf(ml));
+        String t = "";
+        for (int i = 0; i < 8 - messageLengthInHex.length(); i++) {
+            t += "0";
+        }
+        t += messageLengthInHex;
+        messageLengthInHex = t;
         List<String> chunks = new ArrayList<>();
-        for (int i = 0; i < messageInHex.length(); i += 1024) {
+        for (int i = 0; i < messageInHex.length(); i += 128) {
             String chunk = "";
-            for (int j = i; j < messageInHex.length(); j++) {
+            int j;
+            for (j = i; j < (i + 1) * 128 && j < messageInHex.length(); j++) {
                 chunk += messageInHex.charAt(j);
             }
-            chunks.add(i / 1024, chunk);
+            if (j < (i + 1) * 128 - 1) {
+                chunk += "8";
+                if (j >= 112) q = true;
+                for (j = messageInHex.length() + 1; j < (i + 1) * 128 - 8 && !q; j++) {
+                    chunk += BigEndianToHex(BigInteger.valueOf(0));
+                }
+                if (!q) chunk += messageLengthInHex;
+                for (j = messageInHex.length() + 1; j < (i + 1) * 128 && q; j++) {
+                    chunk += BigEndianToHex(BigInteger.valueOf(0));
+                }
+
+            }
+            numOfChunk++;
+            chunks.add(numOfChunk, chunk);
         }
+        if (q) {
+            String chunk = "";
+            for (int i = 0; i < 120; i++) {
+                chunk += BigEndianToHex(BigInteger.ZERO);
+            }
+            chunk += messageLengthInHex;
+            chunks.add(numOfChunk + 1, chunk);
+
+        }
+        var a = h0;
+        var b = h1;
+        var c = h2;
+        var d = h3;
+        var e = h4;
         for (String chunk :
                 chunks) {
             List<String> w = new ArrayList<>(80);
             for (int i = 0; i <= 15; i++) {
                 String temp = "";
-                for (int j = i * 64; j < (i + 1) * 64 && j < chunk.length(); j++) {
+                for (int j = i * 8; j < (i + 1) * 8; j++) {
                     temp += chunk.charAt(j);
                 }
                 w.add(i, temp);
             }
+
             for (int i = 16; i <= 79; i++) {
-                w.add(i, LeftRotate(BigEndianToHex(HexToBigEndian(w.get(i - 3)).xor(HexToBigEndian(w.get(i - 8))).xor(HexToBigEndian(w.get(i - 14))).xor(HexToBigEndian(w.get(i - 16)))), 1));
+                String temp = BigEndianToHex((HexToBigEndian(w.get(i - 3)).xor(HexToBigEndian(w.get(i - 8))).xor(HexToBigEndian(w.get(i - 14))).xor(HexToBigEndian(w.get(i - 16)))).shiftLeft(1));
+                t = "";
+                for (int j = 0; j < 8 - temp.length(); j++) {
+                    t += "0";
+                }
+                t += temp;
+                temp = t;
+                //temp = temp.substring(temp.length() - 8);
+                w.add(i, temp);
             }
-            var a = h0;
-            var b = h1;
-            var c = h2;
-            var d = h3;
-            var e = h4;
+            /*for (int i = 0; i < 80; i++) {
+                System.out.println("i= " + i + "\t w[i].length()=" + w.get(i).length() + "\t w[i]=" + w.get(i));
+            }*/
             for (int i = 0; i <= 79; i++) {
                 String k = "";
                 String f = "";
-                if (i >= 0 && i <= 19) {
+                if (i <= 19) {
                     k = "5A827999";
                     f = BigEndianToHex((HexToBigEndian(b).and(HexToBigEndian(c))).or((HexToBigEndian(b).not()).and(HexToBigEndian(d))));
-                } else if (i >= 20 && i <= 39) {
+                } else if (i <= 39) {
                     f = BigEndianToHex(HexToBigEndian(b).xor(HexToBigEndian(c).xor(HexToBigEndian(d))));
                     k = "6ED9EBA1";
-                } else if (i >= 40 && i <= 59) {
+                } else if (i <= 59) {
                     k = "8F1BBCDC";
                     f = BigEndianToHex((HexToBigEndian(b).and(HexToBigEndian(c))).or(HexToBigEndian(b).and(HexToBigEndian(d))).or(HexToBigEndian(c).and(HexToBigEndian(d))));
-                } else if (i >= 60 && i <= 79) {
+                } else {
                     f = BigEndianToHex(HexToBigEndian(b).xor(HexToBigEndian(c).xor(HexToBigEndian(d))));
                     k = "CA62C1D6";
                 }
-                String temp = BigEndianToHex(HexToBigEndian(LeftRotate(a, 5)).add(HexToBigEndian(f)).add(HexToBigEndian(e)).add(HexToBigEndian(k)).add(HexToBigEndian(w.get(i))));
+                String temp = BigEndianToHex((HexToBigEndian(a).shiftLeft(5)));
+                temp = To8Chars(temp);
+                temp = temp.substring(temp.length() - 8);
+                temp = BigEndianToHex(HexToBigEndian(temp).add(HexToBigEndian(f)));
+                temp = To8Chars(temp);
+                temp = temp.substring(temp.length() - 8);
+                temp = BigEndianToHex(HexToBigEndian(temp).add(HexToBigEndian(e)));
+                temp = To8Chars(temp);
+                temp = temp.substring(temp.length() - 8);
+                temp = To8Chars(temp);
+                temp = BigEndianToHex(HexToBigEndian(temp).add(HexToBigEndian(k)));
+                temp = To8Chars(temp);
+                temp = temp.substring(temp.length() - 8);
+                temp = BigEndianToHex(HexToBigEndian(temp).add(HexToBigEndian(w.get(i))));
+                temp = To8Chars(temp);
+                temp = temp.substring(temp.length() - 8);
+
                 e = d;
                 d = c;
-                c = LeftRotate(b, 30);
+                c = BigEndianToHex(HexToBigEndian(b).shiftLeft(30));
                 b = a;
                 a = temp;
+                a = a.substring(a.length() - 8);
+                b = b.substring(b.length() - 8);
+                c = c.substring(c.length() - 8);
+                d = d.substring(d.length() - 8);
+                e = e.substring(e.length() - 8);
+                h0 = BigEndianToHex(HexToBigEndian(h0).add(HexToBigEndian(a)));
+                h1 = BigEndianToHex(HexToBigEndian(h1).add(HexToBigEndian(b)));
+                h2 = BigEndianToHex(HexToBigEndian(h2).add(HexToBigEndian(c)));
+                h3 = BigEndianToHex(HexToBigEndian(h3).add(HexToBigEndian(d)));
+                h4 = BigEndianToHex(HexToBigEndian(h4).add(HexToBigEndian(e)));
+                h0 = h0.substring(h0.length() - 8);
+                h1 = h1.substring(h1.length() - 8);
+                h2 = h2.substring(h2.length() - 8);
+                h3 = h3.substring(h3.length() - 8);
+                h4 = h4.substring(h4.length() - 8);
+                //System.out.println("i= " + i + ":\t a= " + a + "\tb= " + b + "\tc= " + c + "\td= " + d + "\te= " + e);
             }
-            h0 = BigEndianToHex(HexToBigEndian(h0).add(HexToBigEndian(a)));
-            h1 = BigEndianToHex(HexToBigEndian(h1).add(HexToBigEndian(b)));
-            h2 = BigEndianToHex(HexToBigEndian(h2).add(HexToBigEndian(c)));
-            h3 = BigEndianToHex(HexToBigEndian(h3).add(HexToBigEndian(d)));
-            h4 = BigEndianToHex(HexToBigEndian(h4).add(HexToBigEndian(e)));
         }
-        return BigEndianToHex((HexToBigEndian(h0).shiftLeft(128)).or(HexToBigEndian(h1).shiftLeft(96)).or(HexToBigEndian(h2).shiftLeft(64)).or((HexToBigEndian(h3).shiftLeft(32))).or(HexToBigEndian(h4)));
+
+        return h0 + h1 + h2 + h3 + h4;
     }
 
     public static BigInteger HexToBigEndian(String vector) {
@@ -135,6 +206,7 @@ public class Main {
 
     public static String LittleEndianToHex(BigInteger bigInteger) {
         String res = "";
+        if (bigInteger.equals(BigInteger.ZERO)) return "0";
         while (!bigInteger.equals(BigInteger.ZERO)) {
             BigInteger i = bigInteger.mod(BigInteger.valueOf(16));
             if (i.intValue() < 10 && i.intValue() >= 0) {
