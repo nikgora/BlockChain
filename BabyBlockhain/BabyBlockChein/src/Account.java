@@ -33,10 +33,11 @@ public class Account {
         return balance;
     }
 
-    public BigInteger signData(String message, int index) {
+    public Signature signData(String message, int index) {
         BigInteger messageBI;
         messageBI = new BigInteger(message);
-        BigInteger signature = messageBI.modPow(wallet.get(index).getPrivateKey().getKey(), wallet.get(index).getPrivateKey().getValue());
+        Signature signature = new Signature();
+        signature.signData(message, wallet.get(index).getPrivateKey());
         return signature;
     }
 
