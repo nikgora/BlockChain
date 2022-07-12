@@ -16,4 +16,7 @@ public class Transaction {
         return new Transaction(setOfOperations, nonce);
     }
 
+    public ArrayList<Operation> getSetOfOperations() {
+        return setOfOperations;
+    }
 }

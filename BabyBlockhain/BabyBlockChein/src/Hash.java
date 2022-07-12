@@ -154,7 +154,7 @@ public class Hash {
                 //System.out.println("i= " + i + ":\t a= " + a + "\tb= " + b + "\tc= " + c + "\td= " + d + "\te= " + e);
             }
         }
-
+        hash = h0 + h1 + h2 + h3 + h4;
         return h0 + h1 + h2 + h3 + h4;
     }
 
